@@ -1,0 +1,29 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environments
+.venv/
+env/
+venv/
+ENV/
+.env
+
+# Google Cloud & agents-cli specific
+.agents-cli/
+auth.json
+*.key.json
+credential.json
+.gcloud/
+
+# AI/ML Specific
+data/raw/*
+!data/raw/.gitkeep
+eval_results/
+*.db
+*.sqlite
+
+# OS specific
+.DS_Store
+Thumbs.db
