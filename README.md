@@ -17,14 +17,14 @@ O agente **não realiza diagnósticos** nem substitui avaliação médica, atuan
 
 ## Arquitetura Técnica
 
-| Camada            | Tecnologia                                  |
-| ----------------- | ------------------------------------------- |
-| Framework Agent   | google-agents-cli v0.1.3 + Google ADK       |
-| Modelo de Linguagem | Gemini 2.0 Flash                          |
-| RAG / Grounding   | Vertex AI Search (Agent Platform Search)    |
-| Infraestrutura    | Cloud Run + Terraform (`agents-cli infra`)  |
-| Observabilidade   | Cloud Logging + Cloud Trace                 |
-| Gerenciamento     | `uv` para dependências Python               |
+| Camada              | Tecnologia                                 |
+| ------------------- | ------------------------------------------ |
+| Framework Agent     | google-agents-cli v0.1.3 + Google ADK      |
+| Modelo de Linguagem | Gemini 2.0 Flash                           |
+| RAG / Grounding     | Vertex AI Search (Agent Platform Search)   |
+| Infraestrutura      | Cloud Run + Terraform (`agents-cli infra`) |
+| Observabilidade     | Cloud Logging + Cloud Trace                |
+| Gerenciamento       | `uv` para dependências Python              |
 
 ### Fluxo de Dados
 
@@ -79,12 +79,12 @@ agents-cli playground
 
 ### Comandos Adicionais
 
-| Comando                        | Descrição                                      |
-| ------------------------------ | ---------------------------------------------- |
-| `agents-cli eval`              | Avaliar o agente com conjuntos de teste         |
-| `agents-cli deploy`            | Fazer deploy para Cloud Run                    |
-| `agents-cli publish`           | Publicar no Gemini Enterprise (Google Workspace)|
-| `agents-cli scaffold enhance`  | Adicionar CI/CD, domínio customizado etc.       |
+| Comando                       | Descrição                                        |
+| ----------------------------- | ------------------------------------------------ |
+| `agents-cli eval`             | Avaliar o agente com conjuntos de teste          |
+| `agents-cli deploy`           | Fazer deploy para Cloud Run                      |
+| `agents-cli publish`          | Publicar no Gemini Enterprise (Google Workspace) |
+| `agents-cli scaffold enhance` | Adicionar CI/CD, domínio customizado etc.        |
 
 ---
 
@@ -107,6 +107,27 @@ Vertex AI Search | Cloud Run | Terraform | Cloud Logging | uv
 ```
 
 ---
+
+## Proof of Concept (PoC) & Validação Local
+
+Para garantir a aderência às regras de segurança (HIPAA/LGPD) e validar a capacidade de orquestração do agente, realizamos testes locais utilizando o `agents-cli playground`. Os resultados evidenciam o comportamento correto do modelo diante de diferentes intenções do usuário.
+
+### 1. Interação e Guardrails de Segurança
+
+O agente foi submetido a cenários de teste críticos:
+
+- **Casos de Emergência/Diagnóstico:** Ao relatar sintomas de infarto, o agente aplicou imediatamente as diretrizes de segurança, recusando o diagnóstico e instruindo o paciente a buscar atendimento médico de emergência.
+- **Processo de Slot Filling:** Ao solicitar um agendamento informando dados parciais, o agente identificou a ambiguidade temporal ("amanhã") e a falta de identificação, solicitando ativamente a data exata e o sobrenome do paciente antes de prosseguir com a execução da ferramenta.
+
+![Interface de Chat do Playground](assets/cap-01.jpg)
+
+---
+
+### 2. Observabilidade e Rastreamento de Traces (Spans)
+
+Através do painel de rastreamento do ADK, é possível monitorar o ciclo de vida de cada requisição. O agente registrou com sucesso a hierarquia de execução das chamadas (`root_agent` -> `call_llm` -> `generate_content`), permitindo analisar métricas de latência ponta a ponta e auditoria de comportamento do LLM.
+
+![Métricas de Latência e Traces de Execução](assets/cap-02.jpg)
 
 ## Licença
 
