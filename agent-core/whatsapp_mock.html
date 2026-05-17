@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>WhatsApp Mockup - Clinic Agentic Platform</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #eae6df; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        .chat-container { width: 420px; height: 650px; background-color: #efeae2; box-shadow: 0 4px 20px rgba(0,0,0,0.15); display: flex; flex-direction: column; border-radius: 12px; overflow: hidden; }
+        .chat-header { background-color: #008069; color: white; padding: 15px; display: flex; align-items: center; font-weight: bold; font-size: 16px; }
+        .chat-messages { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+        .message { max-width: 75%; padding: 9px 14px; border-radius: 8px; font-size: 14px; line-height: 1.5; position: relative; word-wrap: break-word; }
+        .patient { background-color: #d9fdd3; align-self: flex-end; border-top-right-radius: 0; box-shadow: 0 1px 1px rgba(0,0,0,0.1); }
+        .agent { background-color: #ffffff; align-self: flex-start; border-top-left-radius: 0; box-shadow: 0 1px 1px rgba(0,0,0,0.1); }
+        .chat-input { background-color: #f0f2f5; padding: 12px; display: flex; gap: 10px; align-items: center; }
+        .chat-input input { flex: 1; padding: 11px 15px; border: none; border-radius: 20px; outline: none; font-size: 14px; }
+        .chat-input button { background-color: #00a884; color: white; border: none; padding: 10px 16px; border-radius: 50%; cursor: pointer; font-weight: bold; font-size: 16px; }
+    </style>
+</head>
+<body>
+
+<div class="chat-container">
+    <div class="chat-header">
+        <span>🩺 Assistente Virtual - Clínica LDP</span>
+    </div>
+    <div class="chat-messages" id="chatBox">
+        <div class="message agent">Olá! Sou o assistente sênior da Clínica LDP. Como posso te ajudar com agendamentos ou orientações de exames hoje?</div>
+    </div>
+    <div class="chat-input">
+        <input type="text" id="userInput" placeholder="Digite uma mensagem..." onkeypress="handleKeyPress(event)">
+        <button onclick="sendMessage()">➔</button>
+    </div>
+</div>
+
+<script>
+    let conversationStep = 0;
+    let patientName = "";
+    let doctorName = "";
+
+    function handleKeyPress(e) {
+        if (e.key === 'Enter') sendMessage();
+    }
+
+    function sendMessage() {
+        const input = document.getElementById('userInput');
+        const chatBox = document.getElementById('chatBox');
+        const text = input.value.trim();
+        if (!text) return;
+
+        // Render patient message
+        const msgPaciente = document.createElement('div');
+        msgPaciente.className = 'message patient';
+        msgPaciente.innerText = text;
+        chatBox.appendChild(msgPaciente);
+
+        input.value = '';
+        chatBox.scrollTop = chatBox.scrollHeight;
+
+        // Dynamic State Machine Mocking Agent Behavior
+        setTimeout(() => {
+            const msgAgente = document.createElement('div');
+            msgAgente.className = 'message agent';
+            
+            if (conversationStep === 0) {
+                msgAgente.innerText = "Com certeza! Posso agendar para você. Para qual médico ou especialidade você gostaria de marcar o horário?";
+                conversationStep = 1;
+            } else if (conversationStep === 1) {
+                doctorName = text;
+                msgAgente.innerText = "Perfeito. E para quem seria o agendamento? Por favor, informe seu nome completo e a data desejada.";
+                conversationStep = 2;
+            } else if (conversationStep === 2) {
+                patientName = text.split(',')[0];
+                msgAgente.innerText = `🔄 [Tool Executed: book_appointment]\n\nAgendamento confirmado com sucesso, ${patientName}! Seu horário com o Dr. Aris está marcado para a próxima segunda-feira, 18/05/2026 às 14:00. Enviamos o preparo do exame para o seu e-mail de cadastro.`;
+                conversationStep = 3;
+            } else {
+                msgAgente.innerText = "Posso te ajudar com mais algum agendamento ou dúvida sobre nossos protocolos clínicos?";
+            }
+
+            chatBox.appendChild(msgAgente);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }, 1000);
+    }
+</script>
+</body>
+</html>
