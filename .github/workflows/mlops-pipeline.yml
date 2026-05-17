@@ -1,0 +1,54 @@
+name: MLOps Pipeline
+
+on:
+  push:
+    branches: [main, feat/*]
+  pull_request:
+    branches: [main]
+
+env:
+  PYTHON_VERSION: "3.11"
+  AGENT_DIR: agent-core
+
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Sync dependencies
+        working-directory: ${{ env.AGENT_DIR }}
+        run: uv sync
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+
+      - name: Run code quality (lint)
+        working-directory: ${{ env.AGENT_DIR }}
+        run: agents-cli lint
+
+      - name: Run evaluation suite
+        working-directory: ${{ env.AGENT_DIR }}
+        run: |
+          agents-cli eval run \
+            --evalset evals/golden_dataset.json \
+            --config tests/eval/eval_config.json
+
+      - name: Check evaluation results
+        if: failure()
+        run: |
+          echo "::error::Model evaluation failed. Deployment blocked."
+          exit 1

@@ -129,6 +129,12 @@ Através do painel de rastreamento do ADK, é possível monitorar o ciclo de vid
 
 ![Métricas de Latência e Traces de Execução](assets/cap-02.jpg)
 
+### 3. Whatsapp simulation
+
+- **Interface de Simulação (WhatsApp Mockup):** Desenvolvemos uma interface estática simulando o canal do WhatsApp. Os testes demonstram o fluxo de conversação fluido, onde o agente executa a retenção de estado e simula o disparo da ferramenta (`book_appointment`) após coletar os dados obrigatórios do paciente.
+
+![Simulação do Atendimento via WhatsApp](assets/wapp.jpg)
+
 ## Licença
 
 Proprietário — LDP Labs Clinic. Uso interno e controlado.

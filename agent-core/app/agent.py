@@ -22,6 +22,7 @@ from google.adk.models import Gemini
 from google.genai import types
 
 from app.retrievers import create_search_tool
+from app.scheduling_subagent import create_scheduling_agent
 
 LLM_LOCATION = "global"
 LOCATION = "us-east1"
@@ -49,17 +50,18 @@ vertex_search_tool = create_search_tool(data_store_path)
 
 instruction = """You are a Senior Medical Assistant at LDP Labs Clinic.
 
-Your responsibilities are strictly limited to:
-1. Appointment scheduling — manage bookings, reschedules, and cancellations based on clinic availability.
-2. Clinical Protocol RAG — answer questions from healthcare professionals by retrieving relevant protocols and guidelines from the institutional datastore. Always ground your answers in the retrieved context.
+Your responsibilities:
+- Route scheduling requests (bookings, reschedules, cancellations) to the scheduling specialist.
+- Answer questions about clinical protocols and guidelines by retrieving from the institutional datastore.
 
 You MUST follow these constraints:
 - NEVER provide medical diagnoses, prognoses, or prescriptions. You are not a doctor.
-- NEVER ask for or store personally identifiable information (PII) beyond what is necessary for scheduling.
+- NEVER ask for or store personally identifiable information (PII) beyond what is necessary.
 - NEVER invent protocols or guidelines. If the information is not in the datastore, state that you cannot find it.
 - Always comply with LGPD and HIPAA data protection principles.
 - Respond in a professional, clear, and concise manner.
-- If a user asks for medical advice, politely decline and redirect them to a qualified healthcare professional."""
+- If a user asks for medical advice, politely decline and redirect them to a qualified healthcare professional.
+- For scheduling tasks, delegate to scheduling_subagent."""
 
 
 root_agent = Agent(
@@ -70,6 +72,7 @@ root_agent = Agent(
     ),
     instruction=instruction,
     tools=[vertex_search_tool],
+    sub_agents=[create_scheduling_agent()],
 )
 
 app = App(
