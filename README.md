@@ -1,129 +1,162 @@
-<img src="assets/doc-eng.jpeg" alt="Engenheiro de MLOps Orquestrando Agentes" width="500"/>
+<div align="center">
+  <img src="assets/doc-eng.jpeg" alt="MLOps Engineer Orchestrating Agents" width="500"/>
+</div>
+
+<br>
+
+<div align="center">
+  <img src="https://img.shields.io/badge/google%20agents%20cli-v0.1.3-blue?style=for-the-badge&logo=google-cloud&logoColor=white" />
+  <img src="https://img.shields.io/badge/Google%20ADK-1.15%2B-blue?style=for-the-badge&logo=google-cloud&logoColor=white" />
+  <img src="https://img.shields.io/badge/Gemini_2.0_Flash-8E75B2?style=for-the-badge&logo=googlegemini&logoColor=white" />
+  <img src="https://img.shields.io/badge/Vertex%20AI%20Search-4285F4?style=for-the-badge&logo=google-cloud&logoColor=white" />
+  <img src="https://img.shields.io/badge/Cloud%20Run-4285F4?style=for-the-badge&logo=google-cloud&logoColor=white" />
+  <img src="https://img.shields.io/badge/terraform-%235835CC.svg?style=for-the-badge&logo=terraform&logoColor=white" />
+  <img src="https://img.shields.io/badge/github%20actions-%232671E5.svg?style=for-the-badge&logo=githubactions&logoColor=white" />
+  <img src="https://img.shields.io/badge/Python%203.11-3776AB?style=for-the-badge&logo=python&logoColor=white" />
+  <img src="https://img.shields.io/badge/uv-FFD43B?style=for-the-badge&logo=python&logoColor=black" />
+  <img src="https://img.shields.io/badge/pydantic-2.13-E92063?style=for-the-badge&logo=pydantic&logoColor=white" />
+</div>
+
+---
 
 # Clinic Agentic Platform
 
-Plataforma baseada em **Google ADK (Agent Development Kit)** e **google-agents-cli** para orquestração inteligente de atendimento clínico.
+Intelligent AI Patient Care Orchestrator built on **Google ADK (Agent Development Kit)** and **google-agents-cli** — a multi-agent system for clinic appointment scheduling and clinical protocol RAG.
 
 ---
 
-## Objetivo do Projeto
+## Project Goal
 
-O **AI Patient Care Orchestrator** é um agente conversacional inteligente projetado para clínicas médicas. Suas responsabilidades principais são:
+The **AI Patient Care Orchestrator** is an intelligent conversational agent designed for medical clinics. Its core responsibilities:
 
-- **Agendamento de consultas**: Gerenciar marcação, remarcação e cancelamento de horários com base na disponibilidade da clínica através de um sub-agente dedicado.
-- **RAG de Protocolos Clínicos**: Responder dúvidas de profissionais de saúde com base em documentos institucionais — manuais de conduta, protocolos e diretrizes clínicas — utilizando **Vertex AI Search** para respostas ancoradas (grounded responses).
+- **Appointment Scheduling**: Manage bookings, reschedules, and cancellations through a dedicated scheduling sub-agent.
+- **Clinical Protocol RAG**: Answer healthcare professional inquiries by retrieving relevant institutional documents — conduct manuals, protocols, and clinical guidelines — using **Vertex AI Search** for grounded responses.
 
-O agente **não realiza diagnósticos** nem substitui avaliação médica, atuando exclusivamente como suporte administrativo e informacional.
-
----
-
-## Arquitetura Técnica
-
-O projeto adota o padrão **Supervisor-Worker (Multi-Agente)**. O agente principal (Root) atua como roteador e orquestrador de intenções, delegando tarefas complexas de escrita e estado para sub-agentes especialistas e consultas semânticas para o motor de RAG.
-
-| Camada              | Tecnologia                                 |
-| ------------------- | ------------------------------------------ |
-| Framework Agent     | google-agents-cli v0.1.3 + Google ADK      |
-| Modelo de Linguagem | Gemini 2.0 Flash                           |
-| RAG / Ancoragem     | Vertex AI Search (Agent Platform Search)   |
-| Infraestrutura      | Cloud Run + Terraform (`agents-cli infra`) |
-| Observabilidade     | Cloud Logging + Cloud Trace                |
-| Gerenciamento       | `uv` para dependências Python              |
-
-### Diagrama da Arquitetura
-
-![Diagrama de Arquitetura do Sistema](assets/arch.jpeg)
-
-### Descrição dos Diretórios
-
-- **agent-core/app**: Código do agente ADK — `agent.yaml`, ferramentas (agendamento, RAG), sub-agentes e lógica de orquestração em Python.
-- **agent-core/deployment**: Infraestrutura como código (IaC) usando Terraform. Prepara Cloud Run, papéis do IAM, APIs e o datastore do Vertex AI Search.
-- **agent-core/evals**: Contém o _Golden Dataset_ com casos capciosos para testar regressão e segurança do modelo antes do deploy.
-- **agent-core/sample_data**: Conjunto de documentos de exemplo (PDFs, markdown) para popular o datastore RAG.
+The agent **never performs diagnoses** nor replaces medical evaluation, acting exclusively as administrative and informational support.
 
 ---
 
-## Fluxo de Trabalho (ADLC — Ciclo de Vida de Desenvolvimento do Agente)
+## Technical Architecture
 
-```bash
-# 1. Instalar dependências do agente e ferramentas de avaliação
-cd agent-core && uv sync --extra eval
+The project adopts a **Supervisor-Worker (Multi-Agent)** pattern. The Root Agent acts as an intent router and orchestrator, delegating scheduling tasks to a specialized sub-agent and handling semantic queries via the RAG engine.
 
-# 2. Provisionar infraestrutura do datastore (Vertex AI Search) no escopo global
-agents-cli infra datastore
+| Layer                | Technology                                   |
+| -------------------- | -------------------------------------------- |
+| Agent Framework      | google-agents-cli v0.1.3 + Google ADK        |
+| Language Model       | Gemini 2.0 Flash                             |
+| RAG / Grounding      | Vertex AI Search (Agent Platform Search)      |
+| Infrastructure       | Cloud Run + Terraform (`agents-cli infra`)    |
+| Observability        | Cloud Logging + Cloud Trace                  |
+| Package Manager      | `uv`                                         |
 
-# 3. Ingerir e indexar documentos no datastore RAG
-agents-cli data-ingestion
-
-# 4. Executar os testes de qualidade linguística e segurança (LLM-as-a-Judge)
-agents-cli eval run --evalset evals/golden_dataset.json --config tests/eval/eval_config.json
-
-# 5. Executar o playground interativo local para testar o agente
-agents-cli playground
+### Interaction Flow
 
 ```
+User
+  └─ root_agent (orchestrator)
+       ├─ [RAG] vertex_search_tool → Vertex AI Search
+       └─ [Delegation] scheduling_subagent
+            ├─ get_availability()
+            ├─ book_appointment()
+            └─ cancel_appointment()
+```
 
-### Comandos Adicionais
+<div align="center">
+  <img src="assets/arch.jpeg" alt="System Architecture Diagram" width="700"/>
+</div>
 
-| Comando                       | Descrição                                        |
-| ----------------------------- | ------------------------------------------------ |
-| `agents-cli lint`             | Verifica a qualidade e formatação do código      |
-| `agents-cli deploy`           | Realiza o deploy da imagem para o Cloud Run      |
-| `agents-cli publish`          | Publicar no Gemini Enterprise (Google Workspace) |
-| `agents-cli scaffold enhance` | Adicionar esteira de CI/CD corporativa           |
+### Directory Structure
+
+- **agent-core/app**: ADK agent code — Python agent definitions, tools (scheduling, RAG), sub-agents, and orchestration logic.
+- **agent-core/deployment**: Infrastructure as Code (IaC) using Terraform. Provisions Cloud Run, IAM roles, APIs, and the Vertex AI Search datastore.
+- **agent-core/evals**: Golden dataset with edge-case evaluations to test regression, safety, and constraint compliance before deployment.
+- **agent-core/sample_data**: Example documents (PDFs, markdown) to populate the RAG datastore.
 
 ---
 
-## Segurança, Compliance e MLOps
+## Workflow (ADLC — Agent Development Lifecycle)
 
-O projeto aplica engenharia de software rigorosa para mitigar riscos comuns em IA Generativa aplicada à saúde:
+```bash
+# 1. Install dependencies and eval tools
+cd agent-core && uv sync --extra eval
 
-- **Proteção de Dados (LGPD/HIPAA):** A tipagem com **Pydantic** e o parâmetro `Field(pattern=...)` validam inputs estritamente na camada de código. Nenhuma informação pessoal identificável (PII) é exposta em logs ou respostas.
-- **Proibição de Diagnósticos Automáticos:** O agente é blindado via instruções de sistema na arquitetura Multi-Agente. Tentativas de obter prescrições disparam uma cláusula de barreira imediata redirecionando o usuário para o 192 (SAMU).
-- **Esteira de LLMOps Automatizada:** O pipeline configurado no GitHub Actions roda testes funcionais e de comportamento de IA a cada integração. Se a nota do juiz (LLM Judge) for inferior ao limite configurado (0.8), a build falha e o deploy é bloqueado.
-- **Rastreabilidade Ponta a Ponta:** OpenTelemetry integrado nativamente captura cada span de execução (`call_llm`, `tool_execution`), facilitando a auditoria SRE de custos de tokens e gargalos de latência.
+# 2. Provision Vertex AI Search datastore infrastructure
+agents-cli infra datastore
+
+# 3. Ingest and index documents into the RAG datastore
+agents-cli data-ingestion
+
+# 4. Run LLM-as-a-Judge evaluation suite
+agents-cli eval run --evalset evals/golden_dataset.json --config tests/eval/eval_config.json
+
+# 5. Launch interactive playground to test the agent
+agents-cli playground
+```
+
+### Additional Commands
+
+| Command                      | Description                                           |
+| ---------------------------- | ----------------------------------------------------- |
+| `agents-cli lint`            | Code quality and formatting checks                    |
+| `agents-cli deploy`          | Deploy the agent image to Cloud Run                   |
+| `agents-cli publish`         | Publish to Gemini Enterprise (Google Workspace)        |
+| `agents-cli scaffold enhance`| Add enterprise CI/CD pipeline                         |
 
 ---
 
-## Stack Tecnológica
+## Security, Compliance & MLOps
+
+The project applies rigorous software engineering to mitigate common Generative AI risks in healthcare:
+
+- **Data Protection (LGPD/HIPAA)**: **Pydantic** type system with `Field(pattern=...)` strictly validates inputs at the code layer. No personally identifiable information (PII) is exposed in logs or responses.
+- **No Automatic Diagnoses**: The agent is shielded via system instructions in the Multi-Agent architecture. Attempts to obtain prescriptions trigger an immediate barrier clause redirecting the user to emergency services.
+- **Automated LLMOps Pipeline**: The GitHub Actions workflow runs functional and behavioral AI tests on every integration. If the LLM Judge score falls below the configured threshold (0.8), the build fails and deployment is blocked.
+- **End-to-End Traceability**: Native OpenTelemetry captures every execution span (`call_llm`, `tool_execution`), enabling SRE audit of token costs and latency bottlenecks.
+
+---
+
+## Proof of Concept & Local Validation
+
+Local tests using `agents-cli playground` demonstrate correct and deterministic behavior across different scenarios.
+
+### 1. Interaction & Safety Guardrails
+
+The agent was tested against critical scenarios:
+
+- **Emergency/Diagnosis Cases**: When presented with heart attack symptoms, the agent immediately applied safety directives, refusing to diagnose and instructing the patient to seek emergency care.
+- **Slot Filling Process**: When a user requested a booking with partial information, the agent identified temporal ambiguity ("tomorrow") and missing identification, actively requesting the exact date and patient surname before delegating to the sub-agent.
+
+### 2. Observability & Trace Spans
+
+Through the ADK tracing panel, every request lifecycle is monitored. The agent successfully registered the execution call hierarchy (`root_agent` → `call_llm` → `generate_content`), enabling end-to-end latency analysis and model behavior auditing.
+
+### 3. WhatsApp Channel Simulation
+
+A static interface simulating the patient experience on messaging platforms was developed. Tests demonstrate fluent conversation flow, dialogue state machine retention, and simulated tool invocation (`book_appointment`) after mandatory data collection.
+
+---
+
+### POC Screenshots
+
+<div align="center">
+  <img src="assets/wapp.jpg" alt="WhatsApp Service Simulation" width="400"/>
+  <br><br>
+  <img src="assets/cap-01.jpg" alt="Playground Chat Interface" width="700"/>
+  <br><br>
+  <img src="assets/cap-02.jpg" alt="Latency Metrics and Execution Traces" width="700"/>
+</div>
+
+---
+
+## Tech Stack
 
 ```
 Python 3.11+ | Google ADK | google-agents-cli v0.1.3 | Gemini 2.0 Flash
 Vertex AI Search | Cloud Run | Terraform | Cloud Trace | Cloud Logging | uv
-
 ```
 
 ---
 
-## Prova de Conceito (PoC) & Validação Local
-
-Os testes locais utilizando o `agents-cli playground` evidenciam o comportamento correto e determinístico do ecossistema de agentes diante de diferentes cenários.
-
-### 1. Interação e Guardrails de Segurança
-
-O agente foi submetido a cenários de teste críticos:
-
-- **Casos de Emergência/Diagnóstico:** Ao relatar sintomas de infarto, o agente aplicou imediatamente as diretrizes de segurança, recusando o diagnóstico e instruindo o paciente a buscar atendimento médico de emergência.
-- **Processo de Coleta de Parâmetros (Slot Filling):** Ao solicitar um agendamento informando dados parciais, o agente identificou a ambiguidade temporal ("amanhã") e a falta de identificação, solicitando ativamente a data exata e o sobrenome do paciente antes de delegar a execução ao sub-agente.
-
----
-
-### 2. Observabilidade e Rastreamento de Traces (Spans)
-
-Através do painel de rastreamento do ADK, monitoramos o ciclo de vida de cada requisição. O agente registrou com sucesso a hierarquia de execução das chamadas (`root_agent` -> `call_llm` -> `generate_content`), permitindo analisar métricas de latência ponta a ponta e auditar o comportamento do modelo.
-
----
-
-### 3. Simulação do Canal de Atendimento (WhatsApp)
-
-Desenvolvemos uma interface estática simulando a experiência final do paciente em canais de mensageria rápida. Os testes demonstram o fluxo de conversação fluido, a retenção de estado da máquina de diálogos e o disparo simulado da ferramenta (`book_appointment`) após a coleta dos dados obrigatórios.
-
----
-
-### POC
-
-![Simulação do Atendimento via WhatsApp](assets/wapp.jpg)
-
-![Interface de Chat do Playground](assets/cap-01.jpg)
-
-![Métricas de Latência e Traces de Execução](assets/cap-02.jpg)
+<div align="center">
+  <sub>Proprietary — LDP Labs Clinic. Internal use only.</sub>
+</div>
